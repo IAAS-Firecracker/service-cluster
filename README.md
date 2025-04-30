@@ -74,3 +74,52 @@ python3 app.py
 - `DELETE /api/service-clusters/<id>` : Supprime un cluster de service
 - `GET /api/service-clusters/search/<nom>` : Recherche des clusters de service par nom
 - `GET /api/service-clusters/available` : Obtient les clusters de service avec des ressources disponibles
+
+
+## Configuration .env docker
+
+```
+FLASK_APP=app.py
+FLASK_ENV=development
+FLASK_DEBUG=1
+SECRET_KEY=your_secret_key_here
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=root
+MYSQL_DB=service_cluster_db
+APP_PORT=5000
+SERVICE_CONFIG_URI=http://service-config:8080
+APP_NAME=service-cluster
+RABBITMQ_HOST=rabbitmq
+RABBITMQ_PORT=5672
+RABBITMQ_USER=guest
+RABBITMQ_PASSWORD=guest
+EUREKA_SERVER=http://service-registry:8761/eureka/
+SERVICE_VM_HOST_PORT=5003
+
+```
+
+## Configuration .env local
+
+```
+FLASK_APP=app.py
+FLASK_ENV=development
+FLASK_DEBUG=1
+SECRET_KEY=your_secret_key_here
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=root
+MYSQL_DB=service_cluster_db
+APP_PORT=5000
+SERVICE_CONFIG_URI=http://localhost:8080
+APP_NAME=service-cluster
+RABBITMQ_HOST=rabbitmq
+RABBITMQ_PORT=5672
+RABBITMQ_USER=guest
+RABBITMQ_PASSWORD=guest
+EUREKA_SERVER=http://localhost:8761/eureka/
+SERVICE_VM_HOST_PORT=5003
+
+```

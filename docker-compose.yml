@@ -1,0 +1,18 @@
+services:
+  service-cluster:
+    build: .
+    ports:
+      - 5000:5000
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - PYTHONUNBUFFERED=1
+    networks:
+      - iaas-firecracker-network
+
+networks:
+  iaas-firecracker-network:

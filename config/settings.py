@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import logging
 import os
-import dotenv
+from dotenv import load_dotenv
 import sys
 import logging
 from pathlib import Path
@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # Charger les variables d'environnement
-dotenv.load_dotenv()
+load_dotenv()
 
 def get_config(application_name, url):
     if not application_name or not url:
@@ -74,12 +74,6 @@ def update_env_vars(env_vars):
         os.environ[key] = str(value)
     logger.info("Variables d'environnement mises à jour en mémoire")
 
-# Configuration du serveur de configuration
-CONFIG_SERVER = {
-    'config': {
-        'uri': os.getenv('SERVICE_CONFIG_URI'),
-    }
-}
 
 def load_config():
     try:
@@ -105,14 +99,7 @@ def load_config():
             return
             
         properties = CONF.get("propertySources")[0].get('source')
-        
-        # Configuration Eureka
-        eureka_conf = {
-            'server': properties.get('eureka.client.service-url.defaultZone'),
-            'app_name': os.getenv('APP_NAME').upper(),
-            'port': int(properties.get('server.port', os.getenv('APP_PORT', '5000')))
-        }
-        logger.info(f"Configuration Eureka: {eureka_conf}")
+
         
         # Configuration RabbitMQ
         RABBITMQ = {
@@ -144,7 +131,7 @@ def load_config():
         
         # Mettre à jour les variables d'environnement
         env_updates = {
-            'APP_PORT': str(eureka_conf['port']),
+            'APP_PORT': int(properties.get('server.port')),
             'MYSQL_HOST': MYSQL['host'],
             'MYSQL_PORT': MYSQL['port'],
             'MYSQL_DB': MYSQL['database'],
@@ -154,7 +141,7 @@ def load_config():
             'RABBITMQ_PORT': RABBITMQ['port'],
             'RABBITMQ_USER': RABBITMQ['username'],
             'RABBITMQ_PASSWORD': RABBITMQ['password'],
-            'EUREKA_SERVER': eureka_conf['server']
+            'EUREKA_SERVER': properties.get('eureka.client.service-url.defaultZone'),
         }
         
         # Mettre à jour les variables d'environnement en mémoire

@@ -12,8 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from models import *  # Importe tous les modèles
-from database import SessionLocal, Base, engine, create_tables, init_database
+
 from config.eureka_client import register_with_eureka, shutdown_eureka
 from routes.cluster_route import router as cluster_router
 from config.settings import load_config
@@ -52,28 +51,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Connect to RabbitMQ on startup
-# @app.on_event("startup")
-# async def startup_event():
-    # Connect to RabbitMQ and set up the exchange for publisher
-    # procedure_publisher.connect()
-    # user_consumer.connect()
-    # file_scheme_consumer.connect()
-    # print(f"Connected to RabbitMQ exchange: {procedure_publisher.exchange_name}")
-    
-
-# Close RabbitMQ connection on shutdown
-# @app.on_event("shutdown")
-# def shutdown_event():
-    # procedure_publisher.close()
-    # user_consumer.close()
-    # file_scheme_consumer.close()
-    # print("Closed all RabbitMQ connections")
     
 # Eureka lifecycle events
 @app.on_event("startup")
 async def startup_event():
-    await register_with_eureka(app)
+    await register_with_eureka()
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -82,15 +64,15 @@ async def shutdown_event():
 
 
 # Endpoint de santé pour Eureka
-@app.get('/api/health', tags=['Système'])
+@app.get('/api/service-clusters/health', tags=['Système'])
 def health_check():
     """Endpoint de vérification de santé pour Eureka"""
     return {"status": "UP"}
 
-@app.get("/api/info")
+@app.get("/api/service-clusters/info")
 def info():
     return {
-        "app": settings.app_name,
+        "app": os.getenv('APP_NAME', 'service-cluster'),
         "version": app.version
     }
 
@@ -103,7 +85,7 @@ if __name__ == '__main__':
     # Récupérer le port de l'application depuis les variables d'environnement
     app_port = int(os.getenv('APP_PORT', 5000))
     logger.info(f"Port de l'application configuré: {app_port}")
-    
+    from database import create_tables, init_database
     # Initialiser la base de données
     if init_database():
         #creation de la base de donnee

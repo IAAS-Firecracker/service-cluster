@@ -1,36 +1,55 @@
 #!/usr/bin/env python3
 import os
-import sys
-import dotenv
-import pymysql
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 import logging
+import pymysql
+from models import *
+from sqlalchemy.orm import Session
+from dependencies import get_db, StandardResponse
+
+
+# Charger les variables d'environnement
+load_dotenv()
 
 # Configurer le logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Charger les variables d'environnement avant d'importer les autres modules
-dotenv.load_dotenv()
+# Configuration de la base de données
+DATABASE_URL = f"mysql+pymysql://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}@{os.getenv('MYSQL_HOST')}:{os.getenv('MYSQL_PORT')}/{os.getenv('MYSQL_DB', 'service_procedure_workflow_courrier_db')}"
 
-# Importer et exécuter les configurations depuis settings.py
-logger.info("Chargement des configurations depuis settings.py...")
-try:
-    from config import settings
-    logger.info("Configurations chargées avec succès")
-except Exception as e:
-    logger.error(f"Erreur lors du chargement des configurations: {e}")
+# Créer le moteur SQLAlchemy
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# Fonction pour créer les tables dans la base de données
+def create_tables():
+    Base.metadata.create_all(bind=engine)
+    print("Tables créées avec succès")
+
+# Fonction pour obtenir une session de base de données
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 
 # Fonction pour initialiser la base de données
 def init_database():
     try:
         logger.info("Initialisation de la base de données...")
         # Récupérer les informations de connexion depuis les variables d'environnement
-        # Ces variables ont été mises à jour par settings.py
         mysql_host = os.getenv('MYSQL_HOST')
         mysql_port = int(os.getenv('MYSQL_PORT'))
         mysql_user = os.getenv('MYSQL_USER')
         mysql_password = os.getenv('MYSQL_PASSWORD')
-        mysql_db = os.getenv('MYSQL_DB')
+        mysql_database = os.getenv('MYSQL_DB', 'service_cluster_db')
         
         logger.info(f"Connexion à MySQL: {mysql_host}:{mysql_port} avec l'utilisateur {mysql_user}")
         
@@ -43,30 +62,28 @@ def init_database():
         )
         
         cursor = conn.cursor()
-        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {mysql_db}")
+        cursor.execute(f"DROP DATABASE IF EXISTS {mysql_database}")
+        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {mysql_database}")
         conn.commit()
         
-        logger.info(f"Base de données '{mysql_db}' créée ou déjà existante.")
+        logger.info(f"Base de données '{mysql_database}' créée ou déjà existante.")
         
         cursor.close()
         conn.close()
-
-        from app import create_tables
-        
-        # Utiliser la fonction create_tables définie dans app.py
-        create_tables()
         
         return True
         
     except Exception as e:
-        print(f"Erreur lors de l'initialisation de la base de données: {e}")
+        logger.error(f"Erreur lors de l'initialisation de la base de données: {e}")
         return False
+
 
 # Fonction pour ajouter des données de test
 def seed_database():
     try:
         logger.info("Ajout des données de test...")
-        from app import app, db, ServiceCluster
+        db = get_db()
+        
         
         # Données de test
         test_clusters = [
@@ -108,16 +125,16 @@ def seed_database():
             }
         ]
         
-        with app.app_context():
+        with db():
             # Vérifier si des données existent déjà
-            existing_count = ServiceCluster.query.count()
+            existing_count = ClusterEntity.query.count()
             if existing_count > 0:
                 logger.info(f"{existing_count} clusters existent déjà dans la base de données.")
                 return True
             
             # Ajouter les clusters de test
             for cluster_data in test_clusters:
-                cluster = ServiceCluster(**cluster_data)
+                cluster = ClusterEntity(**cluster_data)
                 db.session.add(cluster)
             
             # Sauvegarder les changements
@@ -129,23 +146,3 @@ def seed_database():
     except Exception as e:
         print(f"Erreur lors de l'ajout des données de test: {e}")
         return False
-
-# Point d'entrée principal
-if __name__ == '__main__':
-    # Les configurations ont déjà été chargées depuis settings.py
-    # Récupérer le port de l'application depuis les variables d'environnement
-    app_port = int(os.getenv('APP_PORT', 5000))
-    logger.info(f"Port de l'application configuré: {app_port}")
-    
-    # Initialiser la base de données
-    if init_database():
-        # Ajouter des données de test
-        seed_database()
-        
-        # Importer l'application Flask et la démarrer
-        from app import app
-        logger.info(f"Démarrage de l'application sur le port {app_port}...")
-        app.run(debug=True, host='0.0.0.0', port=app_port)
-    else:
-        logger.error("Impossible de démarrer l'application en raison d'erreurs d'initialisation.")
-        sys.exit(1)

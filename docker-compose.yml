@@ -8,8 +8,6 @@ services:
     volumes:
       - .:/app
     environment:
-      - FLASK_APP=app.py
-      - FLASK_ENV=development
       - PYTHONUNBUFFERED=1
     networks:
       - iaas-firecracker-network
@@ -17,4 +15,4 @@ services:
 networks:
   iaas-firecracker-network:
     external: true
-    name: service-config_iaas-firecracker-network  # Replace with actual network name
+    name: service-config_iaas-firecracker-network

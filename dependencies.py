@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 # Dépendance pour obtenir la session de base de données
 def get_db():
-    from app import SessionLocal
+    from database import SessionLocal
     db = SessionLocal()
     try:
         yield db

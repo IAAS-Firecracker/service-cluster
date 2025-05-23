@@ -16,7 +16,7 @@ router = APIRouter(
 # Charger les variables d'environnement avant d'importer les autres modules
 load_dotenv()
 
-@router.get("/", response_model=List[ClusterResponse])
+@router.get("/", response_model=StandardResponse)
 def get_clusters(nom: Optional[str] = None, db: Session = Depends(get_db)):
     query = db.query(ClusterEntity)
     if nom:
@@ -32,8 +32,30 @@ def get_clusters(nom: Optional[str] = None, db: Session = Depends(get_db)):
     return StandardResponse(
         statusCode=200,
         message=message,
-        data=clusters_list
+        data={"clusters": clusters_list}
     )
+
+@router.get('/available', response_model=StandardResponse)
+def get_available_clusters(db: Session = Depends(get_db)):
+    """Obtient les clusters de service avec des ressources disponibles"""
+    try:
+        service_clusters = db.query(ClusterEntity).filter(
+                ClusterEntity.available_rom > 0,
+                ClusterEntity.available_ram > 0,
+                ClusterEntity.available_processor > 0
+            ).all()
+        result = [cluster.to_dict() for cluster in service_clusters]
+        return StandardResponse(
+            statusCode=200,
+            message="Clusters disponibles récupérés avec succès",
+            data={"clusters": result}
+        )
+    except Exception as e:
+        return StandardResponse(
+            statusCode=500,
+            message=f"Erreur lors de la récupération des clusters disponibles: {str(e)}",
+            data=None
+        )
 
 @router.post("/", response_model=StandardResponse, status_code=status.HTTP_201_CREATED,
              summary="Crée un nouveau cluster",
@@ -96,6 +118,8 @@ def create_cluster(cluster: ClusterCreate, db: Session = Depends(get_db)):
             message=f"Erreur lors de la création du cluster: {str(e)}",
             data=None
         )
+
+        
 
 @router.put("/{cluster_id}", response_model=StandardResponse,
              summary="Met à jour un cluster existant",
@@ -179,7 +203,7 @@ def delete_cluster(cluster_id: int, db: Session = Depends(get_db)):
             data=None
         )
 
-@router.get("/{cluster_id}", response_model=ClusterResponse,
+@router.get("/{cluster_id}", response_model=StandardResponse,
             summary="Récupère un cluster existant",
             description="Paramètres: \n- cluster_id (chemin): L'identifiant unique du cluster à récupérer")
 def get_cluster(cluster_id: int, db: Session = Depends(get_db)):
@@ -204,21 +228,6 @@ def get_cluster(cluster_id: int, db: Session = Depends(get_db)):
             message=f"Erreur lors de la récupération du cluster: {str(e)}",
             data=None
         )
-
-@router.get('/available')
-def get_available_clusters(db: Session = Depends(get_db)):
-    """Obtient les clusters de service avec des ressources disponibles"""
-    service_clusters = db.query(ClusterEntity).filter(
-            ClusterEntity.available_rom > 0,
-            ClusterEntity.available_ram > 0,
-            ClusterEntity.available_processor > 0
-        ).all()
-    result = [cluster.to_dict() for cluster in service_clusters]
-    return StandardResponse(
-        statusCode=200,
-        message="Clusters disponibles récupérés avec succès",
-        data=result
-    )
 
 
 @router.post('/find-suitable-host')

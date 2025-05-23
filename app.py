@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 from config.eureka_client import register_with_eureka, shutdown_eureka
 from routes.cluster_route import router as cluster_router
 from config.settings import load_config
+from database import create_tables, init_database, seed_database
 
 # Configurer le logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -55,6 +56,11 @@ app.add_middleware(
 # Eureka lifecycle events
 @app.on_event("startup")
 async def startup_event():
+    # Initialiser la base de données
+    if init_database():
+        #creation de la base de donnee
+        create_tables()
+        seed_database()
     await register_with_eureka()
 
 @app.on_event("shutdown")
@@ -85,7 +91,7 @@ if __name__ == '__main__':
     # Récupérer le port de l'application depuis les variables d'environnement
     app_port = int(os.getenv('APP_PORT', 5000))
     logger.info(f"Port de l'application configuré: {app_port}")
-    from database import create_tables, init_database
+    
     # Initialiser la base de données
     if init_database():
         #creation de la base de donnee

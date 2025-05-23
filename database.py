@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 import logging
 import pymysql
 from models import *
-from sqlalchemy.orm import Session
 from dependencies import get_db, StandardResponse
 
 
@@ -19,17 +18,27 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # Configuration de la base de données
-DATABASE_URL = f"mysql+pymysql://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}@{os.getenv('MYSQL_HOST')}:{os.getenv('MYSQL_PORT')}/{os.getenv('MYSQL_DB', 'service_procedure_workflow_courrier_db')}"
+MYSQL_USER = os.getenv('MYSQL_USER', 'firecracker')
+MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD', 'firecracker')
+MYSQL_HOST = os.getenv('MYSQL_HOST', 'mysql_db_service_cluster')
+MYSQL_PORT = os.getenv('MYSQL_PORT', '3306')
+MYSQL_DB = os.getenv('MYSQL_DATABASE', 'service_cluster_db')
+
+DATABASE_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
 
 # Créer le moteur SQLAlchemy
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Fonction pour créer les tables dans la base de données
 def create_tables():
-    Base.metadata.create_all(bind=engine)
-    print("Tables créées avec succès")
+    """Crée les tables dans la base de données"""
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Tables créées avec succès")
+    except Exception as e:
+        logger.error(f"Erreur lors de la création des tables: {str(e)}")
+        raise
 
 # Fonction pour obtenir une session de base de données
 def get_db():
@@ -44,11 +53,12 @@ def get_db():
 def init_database():
     try:
         logger.info("Initialisation de la base de données...")
-        # Récupérer les informations de connexion depuis les variables d'environnement
-        mysql_host = os.getenv('MYSQL_HOST')
-        mysql_port = int(os.getenv('MYSQL_PORT'))
-        mysql_user = os.getenv('MYSQL_USER')
-        mysql_password = os.getenv('MYSQL_PASSWORD')
+        logger.info(f"Connexion à MySQL: {MYSQL_HOST}:{MYSQL_PORT} avec l'utilisateur {MYSQL_USER}")
+        # Utiliser les variables définies en haut du fichier
+        mysql_host = MYSQL_HOST
+        mysql_port = int(MYSQL_PORT)
+        mysql_user = MYSQL_USER
+        mysql_password = MYSQL_PASSWORD
         mysql_database = os.getenv('MYSQL_DB', 'service_cluster_db')
         
         logger.info(f"Connexion à MySQL: {mysql_host}:{mysql_port} avec l'utilisateur {mysql_user}")
@@ -82,11 +92,15 @@ def init_database():
 def seed_database():
     try:
         logger.info("Ajout des données de test...")
-        db = get_db()
+        # Import ici pour éviter les importations circulaires
+        from models.model_cluster import ClusterEntity
         
+       
         
-        # Données de test
-        test_clusters = [
+        db = SessionLocal()
+        try:
+             # Données de test pour les clusters
+            test_clusters = [
             {
                 'nom': 'Cluster-1',
                 'adresse_mac': '00:1A:2B:3C:4D:5E',
@@ -123,11 +137,9 @@ def seed_database():
                 'available_processor': 50.0,
                 'number_of_core': 24
             }
-        ]
-        
-        with db():
+            ]
             # Vérifier si des données existent déjà
-            existing_count = ClusterEntity.query.count()
+            existing_count = db.query(ClusterEntity).count()
             if existing_count > 0:
                 logger.info(f"{existing_count} clusters existent déjà dans la base de données.")
                 return True
@@ -135,13 +147,17 @@ def seed_database():
             # Ajouter les clusters de test
             for cluster_data in test_clusters:
                 cluster = ClusterEntity(**cluster_data)
-                db.session.add(cluster)
+                db.add(cluster)
             
             # Sauvegarder les changements
-            db.session.commit()
+            db.commit()
             logger.info(f"{len(test_clusters)} clusters ajoutés avec succès.")
-            
             return True
+        except Exception as e:
+            db.rollback()
+            raise e
+        finally:
+            db.close()
             
     except Exception as e:
         print(f"Erreur lors de l'ajout des données de test: {e}")

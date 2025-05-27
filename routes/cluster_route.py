@@ -6,6 +6,7 @@ from models.model_cluster import ClusterEntity, ClusterCreate, ClusterUpdate, Cl
 from dotenv import load_dotenv
 # Importer les dépendances depuis le fichier dependencies.py
 from dependencies import get_db, StandardResponse
+import os
 
 router = APIRouter(
     prefix="/api/service-clusters",
@@ -172,6 +173,7 @@ def update_cluster(cluster_id: int, cluster: ClusterUpdate, db: Session = Depend
             message=f"Erreur lors de la mise à jour du cluster: {str(e)}",
             data=None
         )
+
 
 @router.delete("/{cluster_id}", response_model=StandardResponse,
                summary="Supprime un cluster existant",

@@ -37,15 +37,15 @@ class ClusterEntity(Base):
         }
 
 class VMRequirements(BaseModel):
-    cpu_count: int
-    memory_size_mib: int
-    disk_size_gb: int
-    name: Optional[str] = None
-    user_id: Optional[str] = None
-    os_type: Optional[str] = None
-    root_password: Optional[str] = None
-    vm_offer_id: str
-    system_image_id: str
+    cpu_count: int =2 # nombre de cœurs
+    memory_size_mib: int =2048 # en Mo
+    disk_size_gb: int =5 # en Go
+    name: Optional[str] = "" # nom de la VM
+    user_id: Optional[str] = "1" # id de l'utilisateur
+    os_type: Optional[str] = "ubuntu-24.04" # type d'OS
+    root_password: Optional[str] = "password" # mot de passe root
+    vm_offer_id: int = 1 # id de l'offre de VM
+    system_image_id: int = 2 # id de l'image de système
     
 class ClusterBase(BaseModel):
     nom: str
@@ -64,16 +64,16 @@ class ClusterCreate(ClusterBase):
     pass
 
 class ClusterUpdate(ClusterBase):
-    nom: Optional[str] = None
-    adresse_mac: Optional[str] = None
-    ip: Optional[str] = None
-    rom: Optional[int] = None
-    available_rom: Optional[int] = None
-    ram: Optional[int] = None
-    available_ram: Optional[int] = None
-    processeur: Optional[str] = None
-    available_processor: Optional[float] = None
-    number_of_core: Optional[int] = None
+    nom: Optional[str] = "" # nom du cluster
+    adresse_mac: Optional[str] = "" # adresse MAC du cluster
+    ip: Optional[str] = "" # IP du cluster
+    rom: Optional[int] = 0 # ROM du cluster
+    available_rom: Optional[int] = 0 # ROM disponible du cluster
+    ram: Optional[int] = 0 # RAM du cluster
+    available_ram: Optional[int] = 0 # RAM disponible du cluster
+    processeur: Optional[str] = "" # processeur du cluster
+    available_processor: Optional[float] = 0 # processeur disponible du cluster
+    number_of_core: Optional[int] = 0 # nombre de cœurs du cluster
     
 
 class ClusterResponse(ClusterBase):

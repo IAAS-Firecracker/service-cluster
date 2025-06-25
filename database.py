@@ -101,41 +101,41 @@ def seed_database():
         try:
              # Données de test pour les clusters
             test_clusters = [
+            # {
+            #     'nom': 'Cluster-1',
+            #     'adresse_mac': '00:1A:2B:3C:4D:5E',
+            #     'ip': '192.168.1.100',
+            #     'rom': 1000,
+            #     'available_rom': 800,
+            #     'ram': 64,
+            #     'available_ram': 48,
+            #     'processeur': 'Intel Xeon E5-2680',
+            #     'available_processor': 75.5,
+            #     'number_of_core': 12
+            # },
+            # {
+            #     'nom': 'Cluster-2',
+            #     'adresse_mac': '00:1A:2B:3C:4D:5F',
+            #     'ip': '192.168.1.101',
+            #     'rom': 2000,
+            #     'available_rom': 1500,
+            #     'ram': 128,
+            #     'available_ram': 96,
+            #     'processeur': 'AMD EPYC 7742',
+            #     'available_processor': 85.0,
+            #     'number_of_core': 64
+            # },
             {
-                'nom': 'Cluster-1',
-                'adresse_mac': '00:1A:2B:3C:4D:5E',
-                'ip': '192.168.1.100',
-                'rom': 1000,
-                'available_rom': 800,
-                'ram': 64,
-                'available_ram': 48,
-                'processeur': 'Intel Xeon E5-2680',
-                'available_processor': 75.5,
-                'number_of_core': 12
-            },
-            {
-                'nom': 'Cluster-2',
-                'adresse_mac': '00:1A:2B:3C:4D:5F',
-                'ip': '192.168.1.101',
-                'rom': 2000,
-                'available_rom': 1500,
-                'ram': 128,
-                'available_ram': 96,
-                'processeur': 'AMD EPYC 7742',
-                'available_processor': 85.0,
-                'number_of_core': 64
-            },
-            {
-                'nom': 'Cluster-3',
-                'adresse_mac': '00:1A:2B:3C:4D:60',
-                'ip': '192.168.1.102',
-                'rom': 500,
-                'available_rom': 200,
-                'ram': 32,
-                'available_ram': 16,
-                'processeur': 'Intel Xeon E7-8890',
-                'available_processor': 50.0,
-                'number_of_core': 24
+                'nom': 'zaz',
+                'adresse_mac': '6f:ec:f3:2a:04:60',
+                'ip': '192.168.76.19',
+                'rom': 245,
+                'available_rom': 41,
+                'ram': 15,
+                'available_ram': 2,
+                'processeur': 'x86_64',
+                'available_processor': 95.6,
+                'number_of_core': 4
             }
             ]
             # Vérifier si des données existent déjà

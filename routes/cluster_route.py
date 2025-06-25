@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 # Importer les dépendances depuis le fichier dependencies.py
 from dependencies import get_db, StandardResponse
 import os
+import requests
 
 router = APIRouter(
     prefix="/api/service-clusters",
@@ -295,15 +296,15 @@ def find_suitable_host(vm_requirements: VMRequirements, db: Session = Depends(ge
                 # Obtenir l'URL du service-vm-host à partir de l'hôte sélectionné
                 host_ip = host_info['ip']
                 vm_host_port = os.getenv('SERVICE_VM_HOST_PORT', '5003')
-                vm_host_url = f"http://{host_ip}:{vm_host_port}/vm/create"
+                vm_host_url = f"http://{host_ip}:{vm_host_port}/api/service-vm-host/vm/create"
                     
                 # Envoyer la requête de création de VM au service-vm-host
-                import requests
+                
                 response = requests.post(
                     vm_host_url,
                     json=vm_config,
                     headers={"Content-Type": "application/json"},
-                    timeout=15  # Timeout de 5 secondes
+                    timeout=1500  # Timeout de 5 secondes
                 )
                     
                 # Vérifier la réponse
@@ -333,12 +334,6 @@ def find_suitable_host(vm_requirements: VMRequirements, db: Session = Depends(ge
                     data=None
                 )
             
-            # Si les paramètres pour la création de VM ne sont pas tous présents, retourner uniquement l'hôte
-            return StandardResponse(
-                statusCode=200,
-                message="Hôte trouvé",
-                data=host_info
-            )
         else:
             return StandardResponse(
                 statusCode=404,
